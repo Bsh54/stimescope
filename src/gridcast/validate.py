@@ -24,7 +24,7 @@ def _metrics(y_true, lo, med, hi) -> dict:
     }
 
 
-def cross_validate_by_group(X, y, groups, n_splits=5, alpha=0.2, random_state=0):
+def cross_validate_by_group(X, y, groups, n_splits=5, alpha=0.2, random_state=0, params=None):
     # Each fold holds out whole regions; the interval is conformally calibrated on seen data.
     y_values = y.to_numpy()
     splitter = GroupKFold(n_splits=min(n_splits, groups.nunique()))
@@ -34,7 +34,7 @@ def cross_validate_by_group(X, y, groups, n_splits=5, alpha=0.2, random_state=0)
         X_fit, X_cal, y_fit, y_cal = train_test_split(
             X.iloc[train_idx], y.iloc[train_idx], test_size=0.25, random_state=random_state
         )
-        models = fit_quantile_models(X_fit, y_fit)
+        models = fit_quantile_models(X_fit, y_fit, params=params)
         delta = _conformal_delta(models, X_cal, y_cal, alpha)
         lo = np.expm1(models[0.1].predict(X.iloc[test_idx]) - delta)
         hi = np.expm1(models[0.9].predict(X.iloc[test_idx]) + delta)

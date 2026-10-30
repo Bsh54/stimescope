@@ -26,8 +26,8 @@ NUMERIC_FEATURES = [
 def load_stevanato(path: Path) -> tuple[pd.DataFrame, pd.Series, pd.Series]:
     df = pd.read_csv(path)
     y = pd.to_numeric(df[TARGET], errors="coerce")
-    keep = y > 0
-    df, y = df[keep].copy(), y[keep]
+    mask = (y > 0) & (y <= y[y > 0].quantile(0.99))
+    df, y = df[mask].copy(), y[mask]
 
     appliance_cols = [c for c in df.columns if c.startswith(("Presence_", "m_"))]
     onehot_cols = [c for c in df.columns if c.startswith(("Connection_type_", "Urban/rural_"))]

@@ -18,9 +18,9 @@ def main() -> None:
     print(results.to_string(index=False))
 
     mask = ~np.isnan(out_of_fold)
-    overall_mae = float(np.abs(y.to_numpy()[mask] - out_of_fold[mask]).mean())
-    print(f"\nOverall held-out MAE = {overall_mae:.1f} kWh/month "
-          f"(vs median actual {y.median():.1f})")
+    err = np.abs(y.to_numpy()[mask] - out_of_fold[mask])
+    print(f"\nOverall held-out: MAE={err.mean():.1f}  MedAE={np.median(err):.1f} kWh/month "
+          f"(median actual {y.median():.1f})  |  mean P10-P90 coverage={results['cov%'].mean():.0f}%")
 
 
 if __name__ == "__main__":

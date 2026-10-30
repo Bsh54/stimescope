@@ -13,9 +13,10 @@ def fit_quantile_models(X: pd.DataFrame, y: pd.Series, quantiles=QUANTILES, rand
         model = HistGradientBoostingRegressor(
             loss="quantile",
             quantile=q,
-            max_iter=400,
+            max_iter=500,
             learning_rate=0.05,
-            max_depth=6,
+            min_samples_leaf=30,
+            l2_regularization=0.1,
             random_state=random_state,
         )
         model.fit(X, y_log)

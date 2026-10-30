@@ -22,6 +22,10 @@ def growth_curve(logs_path: Path, min_systems: int = 30) -> pd.DataFrame:
     return table[["fraction_of_mature", "n_systems"]]
 
 
+def load_growth_curve(path: Path) -> pd.DataFrame:
+    return pd.read_csv(path, index_col="month")
+
+
 def project_demand(mature_estimate: dict, curve: pd.DataFrame) -> pd.DataFrame:
     rows = {month: {q: value * fraction for q, value in mature_estimate.items()}
             for month, fraction in curve["fraction_of_mature"].items()}

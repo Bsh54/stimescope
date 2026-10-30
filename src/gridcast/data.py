@@ -5,7 +5,8 @@ import pandas as pd
 TARGET = "Monthly_electricity_consumption"
 GROUP = "Climate_zone_lev_1"
 
-NUMERIC_FEATURES = [
+# Only pre-connection signals: an unelectrified village has no appliances, hours, or tariff yet.
+PRE_CONNECTION_NUMERIC = [
     "Income_of_household",
     "Monthly_expenditure",
     "People_per_household",
@@ -16,11 +17,31 @@ NUMERIC_FEATURES = [
     "Distance_from_grid",
     "Distance_from_city",
     "Population",
-    "Relative_wealth_index_lev_3",
     "Relative_wealth_index_lev_2",
+    "Relative_wealth_index_lev_3",
+    "Population_density_lev_2",
     "Population_density_lev_3",
-    "Hours_available_electricity",
+    "Price_candles",
+    "Price_kerosene",
+    "Price_charcoal",
+    "Price_LPG",
+    "Price_firewood",
+    "Land_owned",
+    "Dwelling_quality_index",
+    "Age_HHH",
+    "Years_of_HHH_in_community",
+    "Size_of_business_employees",
+    "Size_of_business_revenues",
 ]
+
+PRE_CONNECTION_ONEHOT = (
+    "Urban/rural_",
+    "House_ownership_rental_free_",
+    "Male/female_HHH_",
+    "Marital_status_HHH_",
+    "Socio_status_HHH_",
+    "Type_of_business_",
+)
 
 
 def load_stevanato(path: Path) -> tuple[pd.DataFrame, pd.Series, pd.Series]:
@@ -29,11 +50,10 @@ def load_stevanato(path: Path) -> tuple[pd.DataFrame, pd.Series, pd.Series]:
     mask = (y > 0) & (y <= y[y > 0].quantile(0.99))
     df, y = df[mask].copy(), y[mask]
 
-    appliance_cols = [c for c in df.columns if c.startswith(("Presence_", "m_"))]
-    onehot_cols = [c for c in df.columns if c.startswith(("Connection_type_", "Urban/rural_"))]
-    feature_cols = [c for c in NUMERIC_FEATURES if c in df.columns] + appliance_cols + onehot_cols
+    numeric = [c for c in PRE_CONNECTION_NUMERIC if c in df.columns]
+    onehot = [c for c in df.columns if c.startswith(PRE_CONNECTION_ONEHOT)]
+    X = df[numeric + onehot].apply(pd.to_numeric, errors="coerce").dropna(axis=1, how="all")
 
-    X = df[feature_cols].apply(pd.to_numeric, errors="coerce").dropna(axis=1, how="all")
     groups = df[GROUP]
     valid = groups.notna()
     return X[valid], y[valid], groups[valid].astype(str)

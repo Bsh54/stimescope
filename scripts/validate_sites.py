@@ -43,10 +43,11 @@ def main() -> None:
     print(f"\nPer-customer commercial benchmark vs {n} real metered A2EI systems:")
     print(f"  {frac*100:.0f}% fall inside our 15-75 band (P10-P90 targets ~80%); real median {med:.0f} vs our P50 40")
     print("\nHonest read: the 'high' wealth tier (x3, from NREL income levels, NOT fit to these sites)")
-    print("cuts the town bias. But RWI does NOT predict the tier here -- Omorate consumes the most yet")
-    print("has the lowest RWI. The high town demand comes from 24h supply reliability, hot-climate cooling")
-    print("and town commerce (Wassie regression), not wealth. So tier stays an informed input: a single")
-    print("open wealth signal does not close it. Nightlights/climate are the next candidates to test.")
+    print("cuts the town bias. Two obvious auto-tier signals were TESTED and both fail: RWI does not rank")
+    print("the tier (Omorate highest demand, lowest RWI); VIIRS 2021 radiance is 0 at Omorate and Tum")
+    print("(controls Addis 165 / Lagos 315 confirm the read) because pre-connection target villages are")
+    print("dark -- the brief's root cause 'little data before connection'. So tier stays an informed input")
+    print("and the honest wide P10-P90 band (contains truth at all 3 sites) carries the uncertainty.")
 
 
 if __name__ == "__main__":

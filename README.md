@@ -1,16 +1,31 @@
-# gridcast (Stimescope)
+# Stimescope
 
 Pre-connection electricity demand estimation for mini-grids.
 
-`gridcast` estimates the electricity demand of an unelectrified community
-*before* a mini-grid is built — as a calibrated range (P10 / P50 / P90), not a
-single number — together with a post-connection growth curve and a bankability
+Stimescope estimates the electricity demand of an unelectrified community
+*before* a mini-grid is built - as a calibrated range (P10 / P50 / P90), not a
+single number - together with a post-connection growth curve and a bankability
 check. It runs on open public data alone, by outlining an area on a map.
 
 **Live demo:** https://stimescope.shadrakbessanh.me
 
-Built for the Global Energy Hackathon 2026, Problem Brief 03 —
+Built for the Global Energy Hackathon 2026, Problem Brief 03 -
 "Predict mini-grid demand before building" (Digital Solutions & AI).
+
+## Screenshots
+
+![Landing](screenshots/01-landing.png)
+*Outline a village on a map. Open data, validated on real metered sites.*
+
+![Validation](screenshots/02-validation-cards.png)
+*The P10-P90 band contains the metered total at 3 named sites and in about 80% of 38 held-out African microgrids.*
+
+![Results](screenshots/03-results-range.png)
+*A result page: the demand range, the held-out validation, and what drives the estimate.*
+
+![Growth and bankability](screenshots/04-drivers-sizing.png)
+*System sizing, the two-year growth curve, the 24-hour load profile, and the bankability check.*
+
 
 ## Why it matters
 
@@ -24,7 +39,7 @@ brown out, or projects that never get financed.
 
 A regression on existing consumption is the wrong tool here: the only open
 household consumption data is from *grid-connected* homes, a different and much
-higher-demand population than a new rural mini-grid serves. `gridcast` instead
+higher-demand population than a new rural mini-grid serves. Stimescope instead
 uses the sector-standard **bottom-up** method (e-GUIDE / VIDA):
 
 1. **Count customers** from satellite building footprints (Google Open Buildings,
@@ -114,11 +129,11 @@ open-buildings-data) and downloaded on demand per country.
 
 ## Layout
 
-- `src/gridcast/` — package source (benchmarks, estimate, growth, loadprofile,
+- `src/gridcast/` - package source (benchmarks, estimate, growth, loadprofile,
   sizing, bankability, confidence, geo, open_buildings, wealth) + `growth_curve.csv`
-- `scripts/` — command-line entry points, incl. `validate_sites.py`
-- `web/` — offline web app + JavaScript engine; `server/` — count service
-- `data/` — datasets (not committed; see `data/README.md`)
+- `scripts/` - command-line entry points, incl. `validate_sites.py`
+- `web/` - offline web app + JavaScript engine; `server/` - count service
+- `data/` - datasets (not committed; see `data/README.md`)
 
 ## Status
 

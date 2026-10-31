@@ -1,15 +1,15 @@
 import numpy as np
 
 # Normalized 24 h shapes (local time, index = hour). Commercial/anchor shape is MEASURED from
-# A2EI inverter-output telemetry (82 systems). Household shape is an ILLUSTRATIVE evening-peak
-# profile consistent with Blodgett 2017 / Hartvigsson 2018 / MDPI RESILIENT (shape only, not fit
-# to a dataset); the validated result is the load-factor RISE with productive use, not its level.
+# A2EI inverter-output telemetry (82 systems). Household shape is NREL's "all households" rural
+# Sub-Saharan Africa profile (Microgrid Load Profile Explorer, OEDI); its load factor (~0.24) is a
+# property of that real profile, not a tuned target.
 A2EI_COMMERCIAL = np.array([
     0.227, 0.193, 0.176, 0.165, 0.123, 0.122, 0.132, 0.227, 0.457, 0.678, 0.807, 0.934,
     0.998, 1.000, 0.995, 0.985, 0.916, 0.864, 0.844, 0.903, 0.867, 0.709, 0.468, 0.293])
 HOUSEHOLD = np.array([
-    0.06, 0.05, 0.05, 0.05, 0.05, 0.07, 0.14, 0.20, 0.14, 0.10, 0.08, 0.08,
-    0.08, 0.08, 0.10, 0.12, 0.22, 0.45, 0.80, 1.00, 0.90, 0.60, 0.30, 0.12])
+    0.056, 0.056, 0.056, 0.056, 0.056, 0.056, 0.070, 0.070, 0.207, 0.207, 0.207, 0.228,
+    0.126, 0.126, 0.126, 0.074, 0.074, 0.234, 0.365, 0.673, 1.000, 0.939, 0.481, 0.124])
 
 SEGMENT_SHAPES = {"household": HOUSEHOLD, "commercial": A2EI_COMMERCIAL, "anchor": A2EI_COMMERCIAL}
 

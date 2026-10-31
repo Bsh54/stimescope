@@ -9,8 +9,8 @@ month,fraction_of_mature,basis
 7,1.0,a2ei_metered
 8,0.987,a2ei_metered
 9,0.828,a2ei_metered
-12,1.0,amda_growth
-15,1.057,amda_growth
-18,1.118,amda_growth
-21,1.183,amda_growth
-24,1.25,amda_growth
+12,1.0,wassie_tum_metered
+15,1.07,wassie_tum_metered
+18,1.14,wassie_tum_metered
+21,1.22,wassie_tum_metered
+24,1.3,wassie_tum_metered

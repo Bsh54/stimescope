@@ -1,8 +1,6 @@
 import math
 
-from .benchmarks import SEGMENT_BENCHMARKS_KWH_MONTH, WEALTH_TIER, lognormal_params
-
-Z90 = 1.2815515655446004
+from .benchmarks import SEGMENT_MEDIAN_KWH_MONTH, WEALTH_TIER, SITE_LOG_SIGMA, _Z90
 
 
 def _tier_factor(segment: str, tier: str) -> float:
@@ -13,24 +11,14 @@ def segment_medians(segment_counts: dict, adoption_rate: float = 0.7, tier: str 
     out = {}
     for segment, count in segment_counts.items():
         connected = count if segment == "anchor" else count * adoption_rate
-        out[segment] = connected * SEGMENT_BENCHMARKS_KWH_MONTH[segment][1] * _tier_factor(segment, tier)
+        out[segment] = connected * SEGMENT_MEDIAN_KWH_MONTH[segment] * _tier_factor(segment, tier)
     return out
 
 
 def estimate_site_demand(segment_counts: dict, adoption_rate: float = 0.7, tier: str = "typical") -> dict:
-    # Deterministic sum of independent scaled lognormals (Fenton-Wilkinson): match mean+variance,
-    # refit one lognormal, read P10/P50/P90. The per-segment level carries systematic uncertainty.
-    mean = variance = 0.0
-    for segment, count in segment_counts.items():
-        base_mu, sigma = lognormal_params(*SEGMENT_BENCHMARKS_KWH_MONTH[segment])
-        mu = base_mu + math.log(_tier_factor(segment, tier))
-        s2 = sigma * sigma
-        n = count if segment == "anchor" else count * adoption_rate
-        mean += n * math.exp(mu + s2 / 2)
-        variance += n * n * (math.exp(s2) - 1) * math.exp(2 * mu + s2)
-    if mean <= 0:
+    # Central estimate is bottom-up (customers x metered per-customer medians x tier); the P10-P90
+    # band is the measured cross-site spread (SITE_LOG_SIGMA), which dominates before connection.
+    p50 = sum(segment_medians(segment_counts, adoption_rate, tier).values())
+    if p50 <= 0:
         return {0.1: 0.0, 0.5: 0.0, 0.9: 0.0}
-    sig2 = math.log(1 + variance / (mean * mean))
-    mu_sum = math.log(mean) - sig2 / 2
-    sig_sum = math.sqrt(sig2)
-    return {0.1: math.exp(mu_sum - Z90 * sig_sum), 0.5: math.exp(mu_sum), 0.9: math.exp(mu_sum + Z90 * sig_sum)}
+    return {0.1: p50 * math.exp(-_Z90 * SITE_LOG_SIGMA), 0.5: p50, 0.9: p50 * math.exp(_Z90 * SITE_LOG_SIGMA)}

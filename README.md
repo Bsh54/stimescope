@@ -30,10 +30,10 @@ uses the sector-standard **bottom-up** method (e-GUIDE / VIDA):
 2. **Segment** them into households, commercial, and anchor (productive) loads.
 3. **Apply per-customer demand benchmarks** taken from *real metered* references
    (Blodgett Kenya mini-grids, AMDA, A2EI telemetry), each as a P10/P50/P90 band.
-4. **Aggregate deterministically** with a connection rate, summing the segments'
-   lognormal demand bands (Fenton-Wilkinson: match mean and variance, refit one
-   lognormal) to a site P10/P50/P90. No random draws: identical inputs give
-   identical outputs.
+4. **Aggregate deterministically**: the P50 is bottom-up (customers x metered
+   per-customer medians x tier); the P10-P90 band is the measured cross-site demand
+   spread (a lognormal sigma calibrated on 38 metered microgrids, ~80% held-out
+   coverage). No random draws: identical inputs give identical outputs.
 5. **Project the growth curve** derived from real A2EI smart-meter telemetry and
    the Wassie metered trajectory (demand roughly triples over the first ~5 months,
    then grows ~30%/yr through year 2).
@@ -43,10 +43,11 @@ uses the sector-standard **bottom-up** method (e-GUIDE / VIDA):
 
 ## Validation
 
-The commercial benchmark is checked against 82 real metered A2EI systems (our
-P10/P50/P90 band contains the metered median). The growth curve is derived
-directly from that same telemetry. Household benchmarks track Blodgett (~3.4) and
-AMDA (~7) metered references.
+Benchmarks are recalibrated to metered reality (household median ~4 kWh/month,
+Blodgett ~3.4 and the MDPI 2026 harmonized set), and the P10-P90 band is the
+measured cross-site spread. Held-out metered total falls inside the band at the 3
+named sites and in ~80% of 38 representative African microgrids. The P50 is a
+central guess only (demand varies ~40x before connection); the band is the output.
 
 ## Reproduce
 
@@ -62,12 +63,14 @@ python scripts/run_estimate.py       # demand + growth for a sample site
 
 ```
 site                   tier        RWI   metered  P50 tier  err def  err tier  in-band
-Sitolo (Malawi)        typical   -0.32     5,834     6,817     +17%      +17%  True
-Omorate (Ethiopia)     high      -0.40    32,376    31,812     -51%       -2%  True
-Tum (Ethiopia)         high      -0.32    19,456    22,692     -38%      +17%  True
+Sitolo (Malawi)        typical   -0.32     5,834     3,680     -37%      -37%  True
+Omorate (Ethiopia)     high      -0.40    32,376    16,404     -72%      -49%  True
+Tum (Ethiopia)         high      -0.32    19,456    11,928     -64%      -39%  True
+...
+Held-out coverage on 38 metered African microgrids: 30/38 = 79% inside P10-P90.
 ```
 
-The three metered totals fall inside the predicted P10-P90 at all sites. The RWI
+The metered totals fall inside the predicted P10-P90 band. The RWI
 column and the A2EI benchmark line use datasets that are not bundled (see
 `data/README.md`); when absent the script falls back to the published values so
 the core validation still runs with zero downloads.

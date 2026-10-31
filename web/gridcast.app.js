@@ -126,7 +126,7 @@
     // hero result
     el("gc-hero-val").textContent = fmt(d[0.5]);
     el("gc-hero-range").innerHTML = rangeBar(d[0.1], d[0.5], d[0.9]);
-    el("gc-hero-perc").innerHTML = statTile("Per customer", perCust.toFixed(0), "kWh/mo", fmt(conn) + " connected · band 5-35", (perCust >= 5 && perCust <= 35) ? "text-on-surface" : "text-secondary");
+    el("gc-hero-perc").innerHTML = statTile("Per customer", perCust.toFixed(0), "kWh/mo", fmt(conn) + " connected · metered 1.5-50", (perCust >= 1.5 && perCust <= 50) ? "text-on-surface" : "text-secondary");
     el("gc-hero-annual").innerHTML = statTile("Annual energy", fmt(d[0.5] * 12), "kWh/yr", "at mature P50");
 
     // drivers (plain-language breakdown)

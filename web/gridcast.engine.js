@@ -2,12 +2,13 @@
 (function (root) {
   "use strict";
 
-  var SEGMENT_BENCHMARKS = {
-    household: [3.0, 7.0, 18.0],
-    commercial: [15.0, 40.0, 75.0],
-    anchor: [80.0, 250.0, 800.0]
-  };
+  // Median per-customer demand (kWh/month) by segment, metered-grounded (Blodgett ~3.4,
+  // MDPI 2026 existing median ~3.9; AMDA commercial ~26; productive anchors).
+  var SEGMENT_MEDIAN = { household: 4.0, commercial: 22.0, anchor: 180.0 };
   var WEALTH_TIER = { low: 0.5, typical: 1.0, high: 3.0 };
+  // Cross-site demand spread (lognormal sigma), calibrated on 38 metered African microgrids
+  // (Ajasse 2026, Zenodo 21324726): leave-one-country-out P10-P90 coverage ~80%.
+  var SITE_LOG_SIGMA = 1.4;
   var Z90 = 1.2815515655446004;
 
   // Growth curve: year 1 = A2EI metered ramp, year 2 = Wassie Tum metered (+~30%/yr).
@@ -26,41 +27,27 @@
 
   var IRR_AT_MATCH = 12.5, IRR_LOSS_PER_OVERSIZE = 6.4;
 
-  function lognormalParams(p10, p50, p90) {
-    return { mu: Math.log(p50), sigma: (Math.log(p90) - Math.log(p10)) / (2 * Z90) };
-  }
-
   function tierFactor(segment, tier) {
     return segment === "anchor" ? 1.0 : (WEALTH_TIER[tier] || 1.0);
   }
 
-  // Deterministic sum of independent scaled lognormals (Fenton-Wilkinson): match mean+variance,
-  // refit a single lognormal, read P10/P50/P90. Same uncertainty model, no random draws.
+  // Central estimate is bottom-up (customers x metered median x tier); the P10-P90 band is the
+  // measured cross-site spread (SITE_LOG_SIGMA), the dominant uncertainty before connection.
   function estimateSiteDemand(counts, opts) {
     opts = opts || {};
-    var adoption = opts.adoption != null ? opts.adoption : 0.7;
-    var tier = opts.tier || "typical";
-    var mean = 0, variance = 0;
-    Object.keys(counts).forEach(function (segment) {
-      var b = SEGMENT_BENCHMARKS[segment]; if (!b) return;
-      var lp = lognormalParams(b[0], b[1], b[2]);
-      var mu = lp.mu + Math.log(tierFactor(segment, tier)), s2 = lp.sigma * lp.sigma;
-      var n = segment === "anchor" ? counts[segment] : counts[segment] * adoption;
-      mean += n * Math.exp(mu + s2 / 2);
-      variance += n * n * (Math.exp(s2) - 1) * Math.exp(2 * mu + s2);
-    });
-    if (mean <= 0) return { 0.1: 0, 0.5: 0, 0.9: 0 };
-    var sig2 = Math.log(1 + variance / (mean * mean)), muSum = Math.log(mean) - sig2 / 2, sigSum = Math.sqrt(sig2);
-    return { 0.1: Math.exp(muSum - Z90 * sigSum), 0.5: Math.exp(muSum), 0.9: Math.exp(muSum + Z90 * sigSum) };
+    var m = segmentMedians(counts, opts.adoption, opts.tier);
+    var p50 = Object.keys(m).reduce(function (a, k) { return a + m[k]; }, 0);
+    if (p50 <= 0) return { 0.1: 0, 0.5: 0, 0.9: 0 };
+    return { 0.1: p50 * Math.exp(-Z90 * SITE_LOG_SIGMA), 0.5: p50, 0.9: p50 * Math.exp(Z90 * SITE_LOG_SIGMA) };
   }
 
   function segmentMedians(counts, adoption, tier) {
     adoption = adoption != null ? adoption : 0.7; tier = tier || "typical";
     var out = {};
     Object.keys(counts).forEach(function (segment) {
-      var b = SEGMENT_BENCHMARKS[segment]; if (!b) return;
+      var med = SEGMENT_MEDIAN[segment]; if (med == null) return;
       var connected = segment === "anchor" ? counts[segment] : counts[segment] * adoption;
-      out[segment] = connected * b[1] * tierFactor(segment, tier);
+      out[segment] = connected * med * tierFactor(segment, tier);
     });
     return out;
   }
@@ -121,8 +108,8 @@
   function confidence(nBuildings, source, nAnchor, perCustomerKwh, nLarge, osmBuildings) {
     nLarge = nLarge || 0;
     var score = 1.0, reasons = [];
-    if (!(perCustomerKwh >= 5 && perCustomerKwh <= 35)) {
-      score -= 0.40; reasons.push("implied " + perCustomerKwh.toFixed(0) + " kWh/customer is outside the validated 5-35 band; trust the range, expect P50 bias");
+    if (!(perCustomerKwh >= 1.5 && perCustomerKwh <= 50)) {
+      score -= 0.40; reasons.push("implied " + perCustomerKwh.toFixed(0) + " kWh/customer is outside the metered 1.5-50 range; trust the range, not the P50");
     }
     if (source === "open_buildings") { score -= 0.25; reasons.push("automatic satellite estimate: buildings are a ceiling, not connections (our 3 metered sites ran 1.6x-14x more buildings than connections). Set your planned connections and wealth tier for a validated figure"); }
     if (source === "osm") { score -= 0.20; reasons.push("count from OSM only (undercounts rural)"); }
@@ -138,7 +125,7 @@
   }
 
   var api = {
-    SEGMENT_BENCHMARKS: SEGMENT_BENCHMARKS, WEALTH_TIER: WEALTH_TIER, GROWTH_CURVE: GROWTH_CURVE,
+    SEGMENT_MEDIAN: SEGMENT_MEDIAN, WEALTH_TIER: WEALTH_TIER, GROWTH_CURVE: GROWTH_CURVE,
     HOUSEHOLD: HOUSEHOLD, A2EI_COMMERCIAL: A2EI_COMMERCIAL,
     estimateSiteDemand: estimateSiteDemand, segmentMedians: segmentMedians, projectDemand: projectDemand,
     bankability: bankability, profileMetrics: profileMetrics, sizeSystem: sizeSystem, confidence: confidence

@@ -39,3 +39,5 @@ matching subfolder below.
 ## Layout
 
 - `kenya_mtf/` — Kenya MTF survey (raw `.dta`, codebook, questionnaire).
+
+- data/mdpi_microgrids/microgrids_africa.xlsx -- Ajasse et al. 2026, harmonized African microgrid consumption (Zenodo 21324726, CC-BY). 38 existing sites used for held-out coverage.

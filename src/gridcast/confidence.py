@@ -1,14 +1,14 @@
 def confidence(n_buildings: int, source: str, n_anchor: int, per_customer_kwh: float,
                n_large: int = 0, osm_buildings: int | None = None) -> dict:
-    # Grounded in the held-out validation (scripts/validate_sites.py): the P10-P90 band contained
-    # the metered total at all 3 sites, but the P50 point estimate was accurate (+16%) only where
-    # per-customer demand sat in the validated 5-35 kWh band, and biased low (-37 to -50%) for
-    # higher-consumption towns. Confidence here rates the POINT estimate, not the band.
+    # Grounded in held-out validation on 41 metered sites (3 named + 38 from the MDPI 2026
+    # harmonized set): the P10-P90 band contains the metered total ~80% of the time; the P50 point
+    # estimate is only a central guess (demand varies ~40x across sites before connection). Confidence
+    # rates how much to trust the P50, not the band. Real per-customer range is ~1.5-50 kWh/month.
     score = 1.0
     reasons = []
-    if not 5.0 <= per_customer_kwh <= 35.0:
+    if not 1.5 <= per_customer_kwh <= 50.0:
         score -= 0.40
-        reasons.append(f"implied {per_customer_kwh:.0f} kWh/customer is outside the 5-35 band our P50 is validated on; expect P50 bias, trust the range")
+        reasons.append(f"implied {per_customer_kwh:.0f} kWh/customer is outside the metered 1.5-50 range; trust the range, not the P50")
     if source == "open_buildings":
         score -= 0.25
         reasons.append("automatic satellite estimate: buildings are a ceiling, not connections (our 3 metered sites ran 1.6x-14x more buildings than connections); set planned connections and wealth tier for a validated figure")

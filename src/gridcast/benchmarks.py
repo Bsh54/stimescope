@@ -10,6 +10,10 @@ SEGMENT_BENCHMARKS_KWH_MONTH = {
     "anchor": (80.0, 250.0, 800.0),
 }
 
+# Wealth tier multiplier on household/commercial levels, grounded in NREL's income-differentiated
+# rural SSA household demand (Low 3.3 / Medium 9.2 / High 21.5 kWh/month); typical = our default.
+WEALTH_TIER = {"low": 0.5, "typical": 1.0, "high": 3.0}
+
 _Z90 = 1.2815515655446004
 
 

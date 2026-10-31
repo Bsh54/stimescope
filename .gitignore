@@ -2,8 +2,10 @@
 data/*
 !data/README.md
 
-# Work log and scratch are never committed
+# Work log, internal notes and scratch are never committed
 WORKLOG.md
+DEMO_SPEC.txt
+docs/
 scratch/
 *.tmp
 

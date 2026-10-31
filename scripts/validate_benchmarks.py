@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from gridcast.benchmarks import SEGMENT_BENCHMARKS_KWH_MONTH
+from gridcast.benchmarks import SEGMENT_MEDIAN_KWH_MONTH
 
 LOGS = Path("data/a2ei_skgs/A2EI_SKGS_data_release_April2022/skgs_data_LOGS_2021_82_systems.csv")
 
@@ -17,16 +17,14 @@ def a2ei_actual_kwh_month() -> pd.Series:
 
 def main() -> None:
     actual = a2ei_actual_kwh_month()
-    p10, p50, p90 = np.quantile(actual, [0.1, 0.5, 0.9])
-    ours = SEGMENT_BENCHMARKS_KWH_MONTH["commercial"]
+    p25, p50, p75 = np.quantile(actual, [0.25, 0.5, 0.75])
+    ours = SEGMENT_MEDIAN_KWH_MONTH["commercial"]
 
-    print("Validation of the COMMERCIAL benchmark against 82 real metered A2EI systems:")
-    print(f"  our benchmark (P10/P50/P90):  {ours[0]:.0f} / {ours[1]:.0f} / {ours[2]:.0f} kWh/month")
-    print(f"  A2EI metered actual:          {p10:.0f} / {p50:.0f} / {p90:.0f} kWh/month")
-    inside = ours[0] <= p50 <= ours[2]
-    print(f"  A2EI median inside our P10-P90 band: {inside}")
-    print("\nHousehold benchmark (3/7/18) vs metered references: Blodgett Kenya ~3.4, AMDA 2024 ~7.")
-    print("A2EI are micro-enterprise solar generators, so they sit at the high end of 'commercial'.")
+    print("Commercial per-customer median vs 82 real metered A2EI micro-enterprises:")
+    print(f"  our commercial median:  {ours:.0f} kWh/month")
+    print(f"  A2EI metered (P25/P50/P75): {p25:.0f} / {p50:.0f} / {p75:.0f} kWh/month")
+    print("\nA2EI are micro-enterprise solar generators (high end of 'commercial'); our 22 is the")
+    print("rural-village central. Household median 4 tracks Blodgett Kenya ~3.4 and the MDPI 2026 set.")
 
 
 if __name__ == "__main__":

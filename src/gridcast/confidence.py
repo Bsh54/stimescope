@@ -9,6 +9,9 @@ def confidence(n_buildings: int, source: str, n_anchor: int, per_customer_kwh: f
     if not 5.0 <= per_customer_kwh <= 35.0:
         score -= 0.40
         reasons.append(f"implied {per_customer_kwh:.0f} kWh/customer is outside the 5-35 band our P50 is validated on; expect P50 bias, trust the range")
+    if source == "open_buildings":
+        score -= 0.25
+        reasons.append("automatic satellite estimate: buildings are a ceiling, not connections (our 3 metered sites ran 1.6x-14x more buildings than connections); set planned connections and wealth tier for a validated figure")
     if source == "osm":
         score -= 0.20
         reasons.append("count from OSM only (undercounts rural); satellite footprints preferred")

@@ -3,6 +3,14 @@ import numpy as np
 from .benchmarks import SEGMENT_BENCHMARKS_KWH_MONTH, lognormal_params
 
 
+def segment_medians(segment_counts: dict, adoption_rate: float = 0.7) -> dict:
+    out = {}
+    for segment, count in segment_counts.items():
+        connected = count if segment == "anchor" else count * adoption_rate
+        out[segment] = connected * SEGMENT_BENCHMARKS_KWH_MONTH[segment][1]
+    return out
+
+
 def estimate_site_demand(segment_counts: dict, adoption_rate: float = 0.7,
                          n_sims: int = 20000, random_state: int = 0) -> dict:
     # Bottom-up: a village-level per-customer level is drawn once per simulation from the

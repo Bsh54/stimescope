@@ -4,13 +4,25 @@ import urllib.request
 
 OVERPASS_URL = "https://overpass-api.de/api/interpreter"
 
+# Commercial = small shops/services; anchor = productive or institutional loads that drive
+# load factor (mills, markets, telecom, industry, water pumping, health, schools, fuel).
+_BUILDING = ['way["building"]', 'relation["building"]']
+_COMMERCIAL = ['nwr["shop"]', 'nwr["amenity"~"restaurant|cafe|bar|fast_food|bank"]', 'nwr["office"]']
+_ANCHOR = ['nwr["amenity"~"hospital|clinic|doctors|health_post|school|college|university|marketplace|fuel"]',
+           'nwr["man_made"~"works|water_well|water_tower|communications_tower|mast|tower"]',
+           'nwr["tower:type"="communication"]', 'nwr["building"~"industrial|warehouse"]',
+           'nwr["craft"~"grain_mill|sawmill"]']
+
+
+def _group(tags: list[str], lat: float, lon: float, radius_m: int, label: str) -> str:
+    items = "".join(f"{t}(around:{radius_m},{lat},{lon});" for t in tags)
+    return f"({items})->.{label};"
+
 
 def _overpass_counts(lat: float, lon: float, radius_m: int) -> list[int]:
-    query = f"""[out:json][timeout:120];
-(way["building"](around:{radius_m},{lat},{lon}); relation["building"](around:{radius_m},{lat},{lon}); )->.b;
-(nwr["shop"](around:{radius_m},{lat},{lon}); nwr["amenity"="marketplace"](around:{radius_m},{lat},{lon}); )->.c;
-(nwr["amenity"~"hospital|clinic|doctors|school|college"](around:{radius_m},{lat},{lon}); nwr["man_made"="water_well"](around:{radius_m},{lat},{lon}); )->.a;
-.b out count; .c out count; .a out count;"""
+    body = (_group(_BUILDING, lat, lon, radius_m, "b") + _group(_COMMERCIAL, lat, lon, radius_m, "c")
+            + _group(_ANCHOR, lat, lon, radius_m, "a"))
+    query = f"[out:json][timeout:120];{body}.b out count;.c out count;.a out count;"
     payload = urllib.parse.urlencode({"data": query}).encode()
     request = urllib.request.Request(OVERPASS_URL, data=payload,
                                      headers={"User-Agent": "gridcast/0.1 (hackathon research)"})

@@ -1,11 +1,13 @@
-# gridcast
+# gridcast (Stimescope)
 
 Pre-connection electricity demand estimation for mini-grids.
 
 `gridcast` estimates the electricity demand of an unelectrified community
 *before* a mini-grid is built — as a calibrated range (P10 / P50 / P90), not a
 single number — together with a post-connection growth curve and a bankability
-check. It runs on open public data alone, from a pair of coordinates.
+check. It runs on open public data alone, by outlining an area on a map.
+
+**Live demo:** https://stimescope.shadrakbessanh.me
 
 Built for the Global Energy Hackathon 2026, Problem Brief 03 —
 "Predict mini-grid demand before building" (Digital Solutions & AI).
@@ -28,8 +30,8 @@ uses the sector-standard **bottom-up** method (e-GUIDE / VIDA):
 1. **Count customers** from satellite building footprints (Google Open Buildings,
    with OSM as a fallback) within a radius of the site.
 2. **Segment** them into households, commercial, and anchor (productive) loads.
-3. **Apply per-customer demand benchmarks** taken from *real metered* references
-   (Blodgett Kenya mini-grids, AMDA, A2EI telemetry), each as a P10/P50/P90 band.
+3. **Apply per-customer demand medians** taken from *real metered* references
+   (Blodgett Kenya mini-grids ~3.4, MDPI 2026 harmonized set, AMDA, A2EI telemetry).
 4. **Aggregate deterministically**: the P50 is bottom-up (customers x metered
    per-customer medians x tier); the P10-P90 band is the measured cross-site demand
    spread (a lognormal sigma calibrated on 38 metered microgrids, ~80% held-out
@@ -99,6 +101,16 @@ GRIDCAST_HOME=/path/with/tiles uvicorn server.gridcast_api:app --port 8611
 
 The Open Buildings tiles it indexes are public (CC-BY, storage.googleapis.com/
 open-buildings-data) and downloaded on demand per country.
+
+## Brief deliverables
+
+| Deliverable | Where |
+| --- | --- |
+| Demand estimate with a range for any location | web app + `src/gridcast/estimate.py` |
+| Demand growth curve for the first years | `src/gridcast/growth.py`, `growth_curve.csv` |
+| Validation against held-out metered sites | `scripts/validate_sites.py` (3 named + 38 MDPI) |
+| Plain-language driver explanation for lenders | results page "What drives this estimate" + info tooltips |
+| Proposal for safe operator data sharing | submission one-pager / deck |
 
 ## Layout
 

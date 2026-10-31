@@ -36,15 +36,17 @@ def count_buildings(csv_gz_path: Path, lat: float, lon: float, radius_m: int = 2
     return _scan(csv_gz_path, lat, lon, radius_m)[0]
 
 
-def segment_counts(csv_gz_path: Path, lat: float, lon: float, radius_m: int = 2000) -> tuple[dict, int, int, int]:
-    # Anchors from OSM points of interest; large footprints are a separate business signal,
-    # not folded into demand (footprint size alone cannot confirm productive use).
+def segment_counts(csv_gz_path: Path, lat: float, lon: float, radius_m: int = 2000,
+                   commercial_share: float = COMMERCIAL_SHARE) -> tuple[dict, int, int, int]:
+    # The business share is driven by the local economy (2-25% by count across our validated sites:
+    # Sitolo 2%, Tum 9%, Omorate 25%), not by footprint size -- so it is an adjustable input, with
+    # OSM anchors and the large-structure count as priors rather than a definitive count from above.
     buildings, large = _scan(csv_gz_path, lat, lon, radius_m)
     osm_buildings, _, anchor = _overpass_counts(lat, lon, radius_m)
     ordinary = max(buildings - anchor, 0)
     counts = {
-        "household": round(ordinary * HOUSEHOLD_SHARE),
-        "commercial": round(ordinary * COMMERCIAL_SHARE),
+        "household": round(ordinary * (1.0 - commercial_share)),
+        "commercial": round(ordinary * commercial_share),
         "anchor": anchor,
     }
     return counts, buildings, large, osm_buildings

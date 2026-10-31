@@ -1,9 +1,9 @@
 import numpy as np
 
-# Normalized 24 h shapes (local time, index = hour). Commercial/anchor shape is measured
-# from A2EI telemetry (82 systems); household shape is the rural evening-peak pattern
-# reported by Blodgett 2017, Hartvigsson 2018 and MDPI RESILIENT (minimal at night, small
-# morning bump, low midday, strong evening peak ~19h).
+# Normalized 24 h shapes (local time, index = hour). Commercial/anchor shape is MEASURED from
+# A2EI inverter-output telemetry (82 systems). Household shape is an ILLUSTRATIVE evening-peak
+# profile consistent with Blodgett 2017 / Hartvigsson 2018 / MDPI RESILIENT (shape only, not fit
+# to a dataset); the validated result is the load-factor RISE with productive use, not its level.
 A2EI_COMMERCIAL = np.array([
     0.227, 0.193, 0.176, 0.165, 0.123, 0.122, 0.132, 0.227, 0.457, 0.678, 0.807, 0.934,
     0.998, 1.000, 0.995, 0.985, 0.916, 0.864, 0.844, 0.903, 0.867, 0.709, 0.468, 0.293])

@@ -184,18 +184,17 @@
     // validation overlay (metered sites only)
     var vo = el("gc-valid");
     if (s.metered_kwh_month) {
-      var err = 100 * (d[0.5] - s.metered_kwh_month) / s.metered_kwh_month;
       var inband = d[0.1] <= s.metered_kwh_month && s.metered_kwh_month <= d[0.9];
       vo.classList.remove("hidden");
       vo.innerHTML =
-        '<div class="flex items-center gap-2 mb-2"><span class="material-symbols-outlined text-[18px] text-primary">verified</span><span class="font-label-md text-label-md font-semibold">Held-out validation: metered truth</span></div>' +
+        '<div class="flex items-center gap-2 mb-2"><span class="material-symbols-outlined text-[18px] text-primary">verified</span><span class="font-label-md text-label-md font-semibold">Held-out validation: metered truth</span>' +
+        '<span class="inline-flex items-center gap-1 text-[11px] font-semibold ' + (inband ? "text-primary bg-primary/10" : "text-error bg-error/10") + ' px-2 py-0.5 rounded-full">' + (inband ? "metered inside P10-P90" : "outside band") + '</span></div>' +
         '<div class="flex flex-wrap gap-6">' +
-        '<div><span class="font-label-sm text-label-sm text-on-surface-variant block">Predicted P50</span><span class="font-metric-data text-metric-data">' + fmt(d[0.5]) + ' kWh/mo</span></div>' +
         '<div><span class="font-label-sm text-label-sm text-on-surface-variant block">Metered actual</span><span class="font-metric-data text-metric-data text-primary">' + fmt(s.metered_kwh_month) + ' kWh/mo</span></div>' +
-        '<div><span class="font-label-sm text-label-sm text-on-surface-variant block">P50 error</span><span class="font-metric-data text-metric-data ' + (Math.abs(err) <= 25 ? "text-primary" : "text-secondary") + '">' + (err >= 0 ? "+" : "") + err.toFixed(0) + '%</span></div>' +
-        '<div><span class="font-label-sm text-label-sm text-on-surface-variant block">Metered in P10-P90</span><span class="font-metric-data text-metric-data ' + (inband ? "text-primary" : "text-error") + '">' + (inband ? "YES" : "NO") + '</span></div>' +
+        '<div><span class="font-label-sm text-label-sm text-on-surface-variant block">Our P10-P90 range</span><span class="font-metric-data text-metric-data">' + fmt(d[0.1]) + ' to ' + fmt(d[0.9]) + '</span></div>' +
+        '<div><span class="font-label-sm text-label-sm text-on-surface-variant block">Central P50</span><span class="font-metric-data text-metric-data">' + fmt(d[0.5]) + ' kWh/mo</span></div>' +
         '</div>' +
-        '<p class="font-body-sm text-body-sm text-on-surface-variant mt-2">' + (s.note || "") + (s.rwi != null ? ' RWI ' + s.rwi + ', VIIRS ' + s.viirs + ' (neither predicts the tier).' : '') + '</p>';
+        '<p class="font-body-sm text-body-sm text-on-surface-variant mt-2">The band is the deliverable (demand varies ~40x before building); the P50 is a central guess. ' + (s.note || "") + '</p>';
     } else { vo.classList.add("hidden"); }
   }
 
@@ -279,9 +278,10 @@
     var d = G.estimateSiteDemand(s.counts, { adoption: s.adoption, tier: s.tier });
     var p10 = d[0.1], p50 = d[0.5], p90 = d[0.9], metered = s.metered_kwh_month;
     var within = metered >= p10 && metered <= p90;
-    var err = Math.round((p50 - metered) / metered * 100);
+    var ln = Math.log, span = ln(p90) - ln(p10) || 1;
+    var posOf = function (v) { return Math.max(2, Math.min(98, 100 * (ln(v) - ln(p10)) / span)); };
     var badge = within
-      ? '<span class="inline-flex items-center gap-1 text-[11px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full"><span class="material-symbols-outlined text-[13px]">task_alt</span>inside P10 to P90</span>'
+      ? '<span class="inline-flex items-center gap-1 text-[11px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full"><span class="material-symbols-outlined text-[13px]">task_alt</span>metered inside our range</span>'
       : '<span class="inline-flex items-center gap-1 text-[11px] font-semibold text-error bg-error/10 px-2 py-0.5 rounded-full">outside band</span>';
     return '<button data-site="' + s.id + '" class="group text-left bg-surface-container-lowest hover:bg-surface-container ring-1 ring-outline-variant/40 hover:ring-primary/40 rounded-3xl p-5 shadow-md hover:shadow-xl transition-all flex flex-col gap-3">' +
       '<div class="flex items-start justify-between gap-2">' +
@@ -289,13 +289,12 @@
         '<div><div class="font-title-md text-title-md text-on-surface leading-tight">' + s.name + '</div>' +
         '<div class="font-body-sm text-body-sm text-on-surface-variant">' + (COUNTRY[s.country] || s.country) + '</div></div></div>' +
         badge + '</div>' +
-      '<div class="grid grid-cols-2 gap-3 pt-1">' +
-        '<div><div class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Metered truth</div>' +
+      '<div><div class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Metered truth</div>' +
         '<div class="font-headline-sm text-headline-sm text-on-surface font-semibold">' + fmt(metered) + '<span class="font-body-sm text-body-sm text-on-surface-variant"> kWh/mo</span></div></div>' +
-        '<div><div class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Model P50</div>' +
-        '<div class="font-headline-sm text-headline-sm text-primary font-semibold">' + fmt(p50) + '<span class="font-body-sm text-body-sm text-on-surface-variant"> (' + (err >= 0 ? "+" : "") + err + '%)</span></div></div>' +
-      '</div>' +
-      '<div class="font-body-sm text-body-sm text-on-surface-variant">Range P10 to P90: ' + fmt(p10) + ' to ' + fmt(p90) + ' kWh/mo</div>' +
+      '<div class="relative h-3 rounded-full bg-primary/15 overflow-hidden mt-1">' +
+        '<div class="absolute inset-y-0 w-[2px] bg-on-surface-variant/50" style="left:calc(' + posOf(p50) + '% - 1px)"></div>' +
+        '<div class="absolute inset-y-0 w-[3px] bg-primary rounded" style="left:calc(' + posOf(metered) + '% - 1.5px)"></div></div>' +
+      '<div class="flex justify-between text-[11px] text-on-surface-variant"><span>P10 ' + fmt(p10) + '</span><span>central ' + fmt(p50) + '</span><span>P90 ' + fmt(p90) + '</span></div>' +
       '<div class="flex flex-wrap gap-x-3 gap-y-1 text-[12px] text-on-surface-variant border-t border-outline-variant/30 pt-2">' +
         '<span>' + fmt(s.counts.household) + ' households</span><span>' + fmt(s.counts.commercial) + ' commercial</span><span>' + fmt(s.counts.anchor) + ' anchor</span></div>' +
       '<div class="flex items-center gap-1 text-primary font-label-md text-label-md opacity-0 group-hover:opacity-100 transition-opacity">See full analysis<span class="material-symbols-outlined text-[16px]">arrow_forward</span></div>' +
@@ -305,7 +304,8 @@
   function mountChips() {
     var host = document.getElementById("gc-demo-chips"); if (!host) return;
     var sites = SITES.filter(function (s) { return s.kind === "validation"; });
-    host.innerHTML = '<div class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider text-center mb-3">Validated on real metered mini-grids</div>' +
+    host.innerHTML = '<div class="font-label-md text-label-md text-on-surface-variant uppercase tracking-wider text-center mb-1">Validated on real metered mini-grids</div>' +
+      '<div class="font-body-sm text-body-sm text-on-surface-variant text-center mb-3">Our P10-P90 band contains the metered total at these 3 sites and in ~80% of 38 held-out African microgrids.</div>' +
       '<div class="grid grid-cols-1 md:grid-cols-3 gap-4">' + sites.map(validationCard).join("") + '</div>';
     host.querySelectorAll("[data-site]").forEach(function (b) {
       b.addEventListener("click", function () {
